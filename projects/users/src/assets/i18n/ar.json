@@ -1,0 +1,17 @@
+{
+  "tasks": {
+    "addTask": "اضافة مهمة"
+  },
+  "users": {
+
+  },
+  "general": {
+    "loading" :"...انتظار"
+  },
+  "toaster": {
+
+  },
+  "button": {
+
+  }
+}
