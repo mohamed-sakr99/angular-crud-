@@ -8,6 +8,7 @@ import {
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
 import { ConfirmationComponent } from '../confirmation/confirmation.component';
+import { UsersService } from '../../../services/users.service';
 
 @Component({
   selector: 'app-add-task',
@@ -15,11 +16,7 @@ import { ConfirmationComponent } from '../confirmation/confirmation.component';
   styleUrls: ['./add-task.component.scss'],
 })
 export class AddTaskComponent {
-  users: any = [
-    { name: 'Mohamed', id: '65b749c9b661d836a7841c64' },
-    { name: 'Ali', id: '65b74a9ab661d836a7841c67' },
-    { name: 'Ahmed', id: '65bb7ba294607fb4aff8b5dd' },
-  ];
+  users: any = [];
   newTaskFrom!: FormGroup;
   fileName: string = '';
   formValues: any;
@@ -29,11 +26,29 @@ export class AddTaskComponent {
     private taskService: TasksService,
     private toaster: ToastrService,
     private dialogRef: MatDialogRef<AddTaskComponent>,
-    private dialog: MatDialog
-  ) {}
+    private dialog: MatDialog,
+    private usersService: UsersService
+  ) {
+    this.getDataFromSubject();
+  }
   ngOnInit(): void {
     this.createForm();
     console.log('data', this.data);
+  }
+  getDataFromSubject() {
+    this.usersService.userData.subscribe((res: any) => {
+      this.users = this.mapingUsersData(res.data);
+      console.log('users', this.users);
+    });
+  }
+  mapingUsersData(data: any[]) {
+    let newArray = data?.map((item) => {
+      return {
+        name: item?.username,
+        id: item?._id,
+      };
+    });
+    return newArray;
   }
   createForm() {
     this.newTaskFrom = this.fb.group({

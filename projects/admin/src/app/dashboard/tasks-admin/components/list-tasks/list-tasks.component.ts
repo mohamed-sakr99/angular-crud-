@@ -1,5 +1,6 @@
+import { UsersService } from 'projects/admin/src/app/dashboard/services/users.service';
 import { Component, Inject, OnInit } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { AddTaskComponent } from '../add-task/add-task.component';
 import { TasksService } from '../../../services/tasks.service';
 import { ToastrService } from 'ngx-toastr';
@@ -14,45 +15,67 @@ export interface PeriodicElement {
 @Component({
   selector: 'app-list-tasks',
   templateUrl: './list-tasks.component.html',
-  styleUrls: ['./list-tasks.component.scss']
+  styleUrls: ['./list-tasks.component.scss'],
 })
 export class ListTasksComponent implements OnInit {
-  displayedColumns: string[] = ['position', 'title', 'user' ,'deadline','status', 'actions'];
+  displayedColumns: string[] = [
+    'position',
+    'title',
+    'user',
+    'deadline',
+    'status',
+    'actions',
+  ];
   dataSource = [];
   timeOut: any;
   page: any = 1;
-  total:any;
+  total: any;
   filteration: any = {
     page: this.page,
-    limit : 10
+    limit: 10,
   };
-  users: any = [
-    { name: "Mohamed", id: '65b749c9b661d836a7841c64' },
-    { name: "Ali", id: '65b74a9ab661d836a7841c67' },
-  ];
+  users: any = [];
 
-  status: any = [
-    { name: "Complete" },
-    { name: "In-Progress" }
-  ];
+  status: any = [{ name: 'Complete' }, { name: 'In-Progress' }];
   constructor(
     public dialog: MatDialog,
     private tasksService: TasksService,
-  ) { }
-
-  ngOnInit(): void {
-    this.getAllTasks();
-
+    private usersService: UsersService
+  ) {
+    this.getDataFromSubject();
   }
 
+  ngOnInit(): void {
+    this.getUsers();
+    this.getAllTasks();
+  }
+
+  getUsers() {
+    this.usersService.getUserData();
+  }
+
+  getDataFromSubject() {
+    this.usersService.userData.subscribe((res: any) => {
+      this.users = this.mapingUsersData(res.data);
+    });
+  }
+  mapingUsersData(data: any[]) {
+    let newArray = data?.map(item => {
+      return {
+        name: item?.username,
+        id: item?._id,
+      };
+    });
+    return newArray;
+  }
   search(event: any) {
     this.page = 1;
     this.filteration['page'] = 1;
     this.filteration['keyword'] = event.value;
     clearTimeout(this.timeOut);
-    this.timeOut =setTimeout(() => {
+    this.timeOut = setTimeout(() => {
       this.getAllTasks();
-    }, 2000)
+    }, 2000);
   }
   selectUsers(event: any) {
     this.page = 1;
@@ -70,64 +93,60 @@ export class ListTasksComponent implements OnInit {
     this.page = 1;
     this.filteration['page'] = 1;
     this.filteration[type] = event.value; //moment(event.value).format(DD-MM-YYYY)
-    if ( type == 'toDate' && (this.filteration['toDate'] !== 'invalid date')) {
-    this.getAllTasks();
+    if (type == 'toDate' && this.filteration['toDate'] !== 'invalid date') {
+      this.getAllTasks();
     }
   }
   getAllTasks() {
-    this.tasksService.getAllTasks(this.filteration).subscribe((res:any) => {
+    this.tasksService.getAllTasks(this.filteration).subscribe((res: any) => {
       this.dataSource = this.mapingTasks(res.tasks);
       this.total = res.totalItems;
       console.log(res.totalItems);
-
-    })
+    });
   }
 
   mapingTasks(data: any) {
-    let newTasks = data.map((item :any) => {
+    let newTasks = data.map((item: any) => {
       return {
         ...item,
-        user : item?.userId?.username
-      }
-    })
-    return newTasks
+        user: item?.userId?.username,
+      };
+    });
+    return newTasks;
   }
   deleteTask(id: any) {
-    this.tasksService.deleteTasks(id).subscribe(res => {
-    this.getAllTasks();
-    })
-
+    this.tasksService.deleteTasks(id).subscribe((res) => {
+      this.getAllTasks();
+    });
   }
   addTask() {
     const dialogRef = this.dialog.open(AddTaskComponent, {
-      width: "650px",
-      disableClose :true
+      width: '650px',
+      disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result === true) {
         this.getAllTasks();
       }
     });
   }
 
-  updateTask(element:any) {
-     const dialogRef = this.dialog.open(AddTaskComponent, {
-       width: "650px",
-       data: element,
-      disableClose :true
-     });
-    dialogRef.afterClosed().subscribe(result => {
+  updateTask(element: any) {
+    const dialogRef = this.dialog.open(AddTaskComponent, {
+      width: '650px',
+      data: element,
+      disableClose: true,
+    });
+    dialogRef.afterClosed().subscribe((result) => {
       if (result === true) {
         this.getAllTasks();
       }
     });
   }
-  changePage(event:any) {
+  changePage(event: any) {
     this.page = event;
     this.filteration['page'] = event;
     this.getAllTasks();
   }
 }
-
-

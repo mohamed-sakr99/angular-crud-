@@ -23,26 +23,32 @@ export class UsersComponent implements OnInit {
   constructor(
     private userService: UsersService,
     private toaster: ToastrService
-  ) {}
-
-  ngOnInit(): void {
-    this.getAllUsers();
+  ) {
+    this.getDataFromSubject();
   }
 
-  getAllUsers() {
+  ngOnInit(): void {
+    this.getUsers();
+  }
+
+  getUsers() {
     const Model = {
       page: this.page,
       limit: 10,
       name: '',
     };
-    this.userService.getAllUsers(Model).subscribe((res: any) => {
-      this.dataSource = res.users;
-      this.totalItems = res.totalItems;
-    });
+    this.userService.getUserData(Model)
+  }
+
+  getDataFromSubject() {
+    this.userService.userData.subscribe((res: any) => {
+      this.dataSource = res.data;
+      this.totalItems = res.total;
+    })
   }
   changePage(event: any) {
     this.page = event;
-    this.getAllUsers();
+    this.getUsers();
   }
 
   deleteUser(id: string, index: number) {
@@ -51,7 +57,7 @@ export class UsersComponent implements OnInit {
     } else {
       this.userService.deleteUser(id).subscribe((res: any) => {
         this.toaster.success('users deleted successfully', 'success');
-        this.getAllUsers();
+        this.getUsers();
       });
     }
   }
@@ -67,7 +73,7 @@ export class UsersComponent implements OnInit {
     } else {
       this.userService.changeStatus(Model).subscribe((res: any) => {
         this.toaster.success('users updated successfully', 'success');
-        this.getAllUsers();
+        this.getUsers();
       });
     }
   }
